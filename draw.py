@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import torch
 import numpy as np
 from generator import generator_par, complex_split_lorentzian
+from sklearn.metrics import mean_squared_error
 
 def draw_prediction(model):
     x = np.linspace(-200, 200, 400)
@@ -12,22 +13,21 @@ def draw_prediction(model):
     # 使用模型进行预测
     with torch.no_grad():
         model.eval()  # 确保模型在评估模式
-        
         prediction = model(torch.tensor(plot_y,dtype=torch.float32)).numpy()
-
     print("预测结果:", prediction)
-
-    # 把 prediction 的参数带入洛伦兹方程计算拟合。
-
     y_prediction = complex_split_lorentzian(prediction.ravel(),x)
-    # print(y_prediction)
-    # 绘图示例
-    # 假设你想绘制预测结果与原始数据的关系
+    mse = mean_squared_error(plot_y, y_prediction)
+    print("均方误差:",mse)
+    # 计算 y_prediction 与 plot_y 之间的误差。选取一种合适的数学表达
     plt.figure(figsize=(10, 5))
-    plt.plot(plot_y, label='Input Data')
-    plt.plot(y_prediction, label='Model Prediction', linestyle='--')
-    plt.xlabel('Index')
+    plt.plot(x, plot_y, label='Input Data')  # 确保使用正确的 x 值
+    plt.plot(x, y_prediction, label='Model Prediction', linestyle='--')
+    plt.xlabel('Frequency')
+
     plt.ylabel('Value')
     plt.legend()
     plt.title('Model Prediction vs. Input Data')
+    plt.text(0.05, 0.35, f'real: {plot_param}', transform=plt.gca().transAxes, fontsize=9)
+    plt.text(0.05, 0.3, f'pred: {prediction}', transform=plt.gca().transAxes, fontsize=9)
+    plt.text(0.05, 0.5, f'mse: {mse}', transform=plt.gca().transAxes, fontsize=9)
     plt.show()
